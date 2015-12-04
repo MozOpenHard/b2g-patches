@@ -1,0 +1,56 @@
+diff --git a/gecko/hal/gonk/GonkDiskSpaceWatcher.cpp b/gecko/hal/gonk/GonkDiskSpaceWatcher.cpp
+index 49d7015..39e81d2 100644
+--- a/gecko/hal/gonk/GonkDiskSpaceWatcher.cpp
++++ b/gecko/hal/gonk/GonkDiskSpaceWatcher.cpp
+@@ -184,7 +184,7 @@ GonkDiskSpaceWatcher::DoStart()
+       // in opt builds.
+       printf_stderr("Warning: No fanotify support in this device's kernel.\n");
+ #if ANDROID_VERSION >= 19
+-      MOZ_CRASH("Fanotify support must be enabled in the kernel.");
++      //MOZ_CRASH("Fanotify support must be enabled in the kernel.");
+ #endif
+     } else {
+       printf_stderr("Error calling fanotify_init()");
+diff --git a/gecko/security/sandbox/linux/common/SandboxInfo.cpp b/gecko/security/sandbox/linux/common/SandboxInfo.cpp
+index ddd0920..8a6a900 100644
+--- a/gecko/security/sandbox/linux/common/SandboxInfo.cpp
++++ b/gecko/security/sandbox/linux/common/SandboxInfo.cpp
+@@ -166,31 +166,31 @@ SandboxInfo::SandboxInfo() {
+   static_assert(sizeof(flags) >= sizeof(Flags), "enum Flags fits in an int");
+ 
+   if (HasSeccompBPF()) {
+-    flags |= kHasSeccompBPF;
++    //flags |= kHasSeccompBPF;
+     if (HasSeccompTSync()) {
+-      flags |= kHasSeccompTSync;
++      //flags |= kHasSeccompTSync;
+     }
+   }
+ 
+   if (HasUserNamespaceSupport()) {
+-    flags |= kHasPrivilegedUserNamespaces;
++    //flags |= kHasPrivilegedUserNamespaces;
+     if (CanCreateUserNamespace()) {
+-      flags |= kHasUserNamespaces;
++      //flags |= kHasUserNamespaces;
+     }
+   }
+ 
+ #ifdef MOZ_CONTENT_SANDBOX
+   if (!getenv("MOZ_DISABLE_CONTENT_SANDBOX")) {
+-    flags |= kEnabledForContent;
++    //flags |= kEnabledForContent;
+   }
+ #endif
+ #ifdef MOZ_GMP_SANDBOX
+   if (!getenv("MOZ_DISABLE_GMP_SANDBOX")) {
+-    flags |= kEnabledForMedia;
++    //flags |= kEnabledForMedia;
+   }
+ #endif
+   if (getenv("MOZ_SANDBOX_VERBOSE")) {
+-    flags |= kVerbose;
++    //flags |= kVerbose;
+   }
+ 
+   mFlags = static_cast<Flags>(flags);
