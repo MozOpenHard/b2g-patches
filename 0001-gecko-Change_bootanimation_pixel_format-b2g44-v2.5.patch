@@ -1,0 +1,12 @@
+diff --git a/gecko/widget/gonk/libdisplay/BootAnimation.cpp b/gecko/widget/gonk/libdisplay/BootAnimation.cpp
+index a627d16..8dd758a 100644
+--- a/gecko/widget/gonk/libdisplay/BootAnimation.cpp
++++ b/gecko/widget/gonk/libdisplay/BootAnimation.cpp
+@@ -512,6 +512,7 @@ AnimationThread(void *)
+ {
+     GonkDisplay *display = GetGonkDisplay();
+     int32_t format = display->surfaceformat;
++    format = HAL_PIXEL_FORMAT_BGRA_8888;
+ 
+     const hw_module_t *module = nullptr;
+     if (hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &module)) {

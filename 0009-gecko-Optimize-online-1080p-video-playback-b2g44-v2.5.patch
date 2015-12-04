@@ -1,0 +1,38 @@
+diff --git a/gecko/b2g/app/b2g.js b/gecko/b2g/app/b2g.js
+index d2316b9..0e0fc6e 100644
+--- a/gecko/b2g/app/b2g.js
++++ b/gecko/b2g/app/b2g.js
+@@ -314,7 +314,7 @@ pref("notification.feature.enabled", true);
+ // prevent video elements from preloading too much data
+ pref("media.preload.default", 1); // default to preload none
+ pref("media.preload.auto", 2);    // preload metadata if preload=auto
+-pref("media.cache_size", 4096);    // 4MB media cache
++pref("media.cache_size", 32768);    // 4MB media cache
+ // Try to save battery by not resuming reading from a connection until we fall
+ // below 10s of buffered data.
+ pref("media.cache_resume_threshold", 10);
+diff --git a/gecko/dom/media/MediaCache.cpp b/gecko/dom/media/MediaCache.cpp
+index da69a7e..0163178 100644
+--- a/gecko/dom/media/MediaCache.cpp
++++ b/gecko/dom/media/MediaCache.cpp
+@@ -573,8 +573,18 @@ MediaCache::Init()
+   NS_ASSERTION(!mFileCache, "Cache file already open?");
+ 
+   PRFileDesc* fileDesc = nullptr;
+-  nsresult rv = NS_OpenAnonymousTemporaryFile(&fileDesc);
+-  NS_ENSURE_SUCCESS(rv,rv);
++  nsresult rv;
++
++  nsAutoCString name("/tmp/mozilla-temp-");
++  name.AppendInt(rand());
++
++  fileDesc = PR_Open(name.get(), PR_RDWR | PR_CREATE_FILE, PR_IRWXU);
++  if (fileDesc != 0)
++      PR_Delete(name.get());
++  else {
++      rv = NS_OpenAnonymousTemporaryFile(&fileDesc);
++      NS_ENSURE_SUCCESS(rv,rv);
++  }
+ 
+   mFileCache = new FileBlockCache();
+   rv = mFileCache->Open(fileDesc);

@@ -1,0 +1,12 @@
+diff --git a/gaia/build/settings.js b/gaia/build/settings.js
+index c828fa6..779e17e 100644
+--- a/gaia/build/settings.js
++++ b/gaia/build/settings.js
+@@ -247,6 +247,7 @@ function execute(config) {
+     settings['developer.menu.enabled'] = true;
+   }
+ 
++  settings['device.storage.writable.name'] = 'internal_sd';
+   // Set the ftu manifest URL
+   if (config.NOFTU === '0') {
+     settings['ftu.manifestURL'] = utils.gaiaManifestURL('ftu',

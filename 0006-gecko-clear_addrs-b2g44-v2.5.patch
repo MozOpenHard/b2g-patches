@@ -1,0 +1,93 @@
+diff --git a/gecko/dom/system/gonk/NetworkUtils.cpp b/gecko/dom/system/gonk/NetworkUtils.cpp
+index f057556..859beb9 100644
+--- a/gecko/dom/system/gonk/NetworkUtils.cpp
++++ b/gecko/dom/system/gonk/NetworkUtils.cpp
+@@ -152,9 +152,10 @@ const CommandFunc NetworkUtils::sWifiEnableChain[] = {
+ 
+ const CommandFunc NetworkUtils::sWifiDisableChain[] = {
+   NetworkUtils::clearWifiTetherParms,
++  NetworkUtils::clearAddrs,
++  NetworkUtils::wifiFirmwareReload,
+   NetworkUtils::stopSoftAP,
+   NetworkUtils::stopAccessPointDriver,
+-  NetworkUtils::wifiFirmwareReload,
+   NetworkUtils::untetherInterface,
+   NetworkUtils::removeInterfaceFromLocalNetwork,
+   NetworkUtils::preTetherInterfaceList,
+@@ -167,6 +168,7 @@ const CommandFunc NetworkUtils::sWifiDisableChain[] = {
+ 
+ const CommandFunc NetworkUtils::sWifiFailChain[] = {
+   NetworkUtils::clearWifiTetherParms,
++  NetworkUtils::clearAddrs,
+   NetworkUtils::stopSoftAP,
+   NetworkUtils::setIpForwardingEnabled,
+   NetworkUtils::stopTethering
+@@ -174,6 +176,7 @@ const CommandFunc NetworkUtils::sWifiFailChain[] = {
+ 
+ const CommandFunc NetworkUtils::sWifiRetryChain[] = {
+   NetworkUtils::clearWifiTetherParms,
++  NetworkUtils::clearAddrs,
+   NetworkUtils::stopSoftAP,
+   NetworkUtils::stopTethering,
+ 
+@@ -676,6 +679,15 @@ void NetworkUtils::startSoftAP(CommandChain* aChain,
+   doCommand(command, aChain, aCallback);
+ }
+ 
++void NetworkUtils::clearAddrs(CommandChain* aChain,
++                              CommandCallback aCallback,
++                              NetworkResultOptions& aResult)
++{
++  char command[MAX_COMMAND_SIZE];
++  snprintf(command, MAX_COMMAND_SIZE - 1, "interface clearaddrs %s", GET_CHAR(mIfname));
++  doCommand(command, aChain, aCallback);
++}
++
+ void NetworkUtils::stopSoftAP(CommandChain* aChain,
+                               CommandCallback aCallback,
+                               NetworkResultOptions& aResult)
+@@ -1160,6 +1172,16 @@ void NetworkUtils::removeDefaultRoute(CommandChain* aChain,
+   doCommand(command, aChain, wrappedCallback);
+ }
+ 
++void NetworkUtils::flushDefaultInterface(CommandChain* aChain,
++                                         CommandCallback aCallback,
++                                         NetworkResultOptions& aResult)
++{
++  char command[MAX_COMMAND_SIZE];
++  snprintf(command, MAX_COMMAND_SIZE - 1, "resolver flushdefaultif");
++
++  doCommand(command, aChain, aCallback);
++}
++
+ void NetworkUtils::setInterfaceDns(CommandChain* aChain,
+                                    CommandCallback aCallback,
+                                    NetworkResultOptions& aResult)
+@@ -1878,6 +1900,7 @@ CommandResult NetworkUtils::setDNS(NetworkParams& aOptions)
+       setDefaultInterface,
+     #endif
+       setInterfaceDns,
++      flushDefaultInterface,
+       defaultAsyncSuccessHandler
+     };
+     runChain(aOptions, COMMAND_CHAIN, setDnsFail);
+diff --git a/gecko/dom/system/gonk/NetworkUtils.h b/gecko/dom/system/gonk/NetworkUtils.h
+index d78184f..fe31cc3 100644
+--- a/gecko/dom/system/gonk/NetworkUtils.h
++++ b/gecko/dom/system/gonk/NetworkUtils.h
+@@ -357,6 +357,7 @@ private:
+   static void createUpStream(PARAMS);
+   static void startSoftAP(PARAMS);
+   static void stopSoftAP(PARAMS);
++  static void clearAddrs(PARAMS);
+   static void clearWifiTetherParms(PARAMS);
+   static void enableAlarm(PARAMS);
+   static void disableAlarm(PARAMS);
+@@ -384,6 +385,7 @@ private:
+   static void enableNat(PARAMS);
+   static void disableNat(PARAMS);
+   static void setDefaultInterface(PARAMS);
++  static void flushDefaultInterface(PARAMS);
+   static void setInterfaceDns(PARAMS);
+   static void wifiTetheringSuccess(PARAMS);
+   static void usbTetheringSuccess(PARAMS);

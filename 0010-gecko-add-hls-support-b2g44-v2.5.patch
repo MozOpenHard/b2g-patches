@@ -1,0 +1,63 @@
+diff --git a/gecko/dom/media/MediaResource.h b/gecko/dom/media/MediaResource.h
+index 8875174..b9dde35 100644
+--- a/gecko/dom/media/MediaResource.h
++++ b/gecko/dom/media/MediaResource.h
+@@ -244,6 +244,9 @@ public:
+   // the main thread.
+   NS_DECL_THREADSAFE_ISUPPORTS
+ 
++  // Add for http live streaming.
++  virtual nsIURI * GetURI() { return nullptr; };
++
+   // The following can be called on the main thread only:
+   // Get the URI
+   virtual nsIURI* URI() const { return nullptr; }
+@@ -451,6 +454,7 @@ private:
+ class BaseMediaResource : public MediaResource {
+ public:
+   virtual nsIURI* URI() const override { return mURI; }
++  virtual nsIURI * GetURI() { return mURL; }
+   virtual void SetLoadInBackground(bool aLoadInBackground) override;
+ 
+   virtual size_t SizeOfExcludingThis(
+@@ -488,7 +492,8 @@ protected:
+     mChannel(aChannel),
+     mURI(aURI),
+     mContentType(aContentType),
+-    mLoadInBackground(false)
++    mLoadInBackground(false),
++    mURL(aURI)
+   {
+     MOZ_COUNT_CTOR(BaseMediaResource);
+     NS_ASSERTION(!mContentType.IsEmpty(), "Must know content type");
+@@ -539,6 +544,8 @@ protected:
+   // blocked by this resource, and all channel loads will be in the
+   // background.
+   bool mLoadInBackground;
++
++  nsIURI* mURL;
+ };
+ 
+ 
+diff --git a/gecko/dom/media/omx/MediaStreamSource.h b/gecko/dom/media/omx/MediaStreamSource.h
+index ceae129..e5aa044 100644
+--- a/gecko/dom/media/omx/MediaStreamSource.h
++++ b/gecko/dom/media/omx/MediaStreamSource.h
+@@ -45,6 +45,17 @@ public:
+ 
+   int64_t Tell();
+ 
++  virtual const char *getPath() {
++    nsIURI* uri = mResource.GetResource()->GetURI();
++    if (! uri) {
++      return "--- uri is null ---";
++    }
++
++    nsCString spec;
++    uri->GetSpec(spec);
++    return spec.get();
++  }
++
+   virtual ~MediaStreamSource();
+ 
+ private:

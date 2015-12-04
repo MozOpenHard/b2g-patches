@@ -1,0 +1,25 @@
+diff --git a/gecko/configure.in b/gecko/configure.in
+index a93ab32..1d3564f 100644
+--- a/gecko/configure.in
++++ b/gecko/configure.in
+@@ -260,6 +260,7 @@ if test -n "$gonkdir" ; then
+         fi
+         MOZ_NFC=1
+         MOZ_RTSP=1
++        NECKO_PROTOCOL_rtsp=1
+         MOZ_OMX_DECODER=1
+         MOZ_OMX_ENCODER=1
+         AC_DEFINE(MOZ_OMX_ENCODER)
+@@ -3743,8 +3744,12 @@ NSS_DISABLE_DBM=
+ NECKO_COOKIES=1
+ NECKO_PROTOCOLS_DEFAULT="about app data file ftp http res viewsource websocket wyciwyg device"
+ if test -n "$MOZ_RTSP"; then
++  AC_DEFINE(MOZ_RTSP)
++  AC_DEFINE(NECKO_PROTOCOL_rtsp)
+   NECKO_PROTOCOLS_DEFAULT="$NECKO_PROTOCOLS_DEFAULT rtsp"
+ fi
++AC_SUBST(NECKO_PROTOCOL_rtsp)
++AC_SUBST(MOZ_RTSP)
+ USE_ARM_KUSER=
+ BUILD_CTYPES=1
+ MOZ_USE_NATIVE_POPUP_WINDOWS=

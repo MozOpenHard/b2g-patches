@@ -1,0 +1,13 @@
+diff --git a/gaia/build/settings.js b/gaia/build/settings.js
+index c828fa6..0516eee 100644
+--- a/gaia/build/settings.js
++++ b/gaia/build/settings.js
+@@ -304,6 +304,8 @@ function execute(config) {
+   var screenTimeout = parseInt(config.SCREEN_TIMEOUT, 10);
+   if (screenTimeout >= 0) {
+     settings['screen.timeout'] = screenTimeout;
++  } else {
++    settings['screen.timeout'] = 0;
+   }
+ 
+   setDefaultKeyboardLayouts(config.GAIA_DEFAULT_LOCALE, settings, config);

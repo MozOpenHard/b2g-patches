@@ -1,0 +1,22 @@
+diff --git a/gecko/dom/media/DecoderTraits.cpp b/gecko/dom/media/DecoderTraits.cpp
+index f30cac9..8e683a2 100644
+--- a/gecko/dom/media/DecoderTraits.cpp
++++ b/gecko/dom/media/DecoderTraits.cpp
+@@ -225,6 +225,17 @@ static const char* const gOmxTypes[] = {
+   "video/3gpp",
+   "video/3gpp2",
+   "video/quicktime",
++  "video/x-flv",
++  "video/x-f4v",
++  "video/x-msvideo",
++  "video/x-matroska",
++  "video/mp2t",
++  "video/mp2p",
++  "application/octet-stream",
++  "application/x-mpegURL",
++  "application/x-mpegurl",
++  "application/vnd.apple.mpegURL",
++  "application/vnd.apple.mpegurl",
+ #ifdef MOZ_OMX_WEBM_DECODER
+   "video/webm",
+   "audio/webm",

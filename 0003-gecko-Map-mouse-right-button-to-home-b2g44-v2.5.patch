@@ -1,0 +1,14 @@
+diff --git a/gecko/widget/gonk/libui/InputReader.cpp b/gecko/widget/gonk/libui/InputReader.cpp
+index 3699569..caae585 100644
+--- a/gecko/widget/gonk/libui/InputReader.cpp
++++ b/gecko/widget/gonk/libui/InputReader.cpp
+@@ -198,6 +198,9 @@ static void synthesizeButtonKeys(InputReaderContext* context, int32_t action,
+     synthesizeButtonKey(context, action, when, deviceId, source, policyFlags,
+             lastButtonState, currentButtonState,
+             AMOTION_EVENT_BUTTON_FORWARD, AKEYCODE_FORWARD);
++    synthesizeButtonKey(context, action, when, deviceId, source, policyFlags,
++            lastButtonState, currentButtonState,
++            AMOTION_EVENT_BUTTON_SECONDARY, AKEYCODE_HOME);
+ }
+ 
+ 

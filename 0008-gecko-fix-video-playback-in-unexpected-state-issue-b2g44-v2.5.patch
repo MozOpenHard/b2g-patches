@@ -1,0 +1,36 @@
+diff --git a/gecko/dom/media/omx/OmxDecoder.cpp b/gecko/dom/media/omx/OmxDecoder.cpp
+index 702a180..e8d35f2 100644
+--- a/gecko/dom/media/omx/OmxDecoder.cpp
++++ b/gecko/dom/media/omx/OmxDecoder.cpp
+@@ -762,6 +762,7 @@ bool OmxDecoder::ReadAudio(AudioFrame *aFrame, int64_t aSeekTimeUs)
+ 
+ nsresult OmxDecoder::Play()
+ {
++#if 0
+   if (!mVideoPaused && !mAudioPaused) {
+     return NS_OK;
+   }
+@@ -776,6 +777,7 @@ nsresult OmxDecoder::Play()
+   }
+   mAudioPaused = false;
+ 
++#endif
+   return NS_OK;
+ }
+ 
+@@ -795,6 +797,7 @@ void OmxDecoder::Pause()
+    * Since there is not power consumption problem in emulator, we will just
+    * return when running in emulator to fix timeouts in mochitests.
+    */
++#if 0
+   if (isInEmulator()) {
+     return;
+   }
+@@ -810,6 +813,7 @@ void OmxDecoder::Pause()
+   if (mAudioSource.get() && mAudioSource->pause() == OK) {
+     mAudioPaused = true;
+   }
++#endif
+ }
+ 
+ // Called on ALooper thread.
