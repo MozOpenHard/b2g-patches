@@ -1,0 +1,162 @@
+diff --git a/frameworks/av/include/media/stagefright/ACodec.h b/frameworks/av/include/media/stagefright/ACodec.h
+index 302a538..87b88d6 100644
+--- a/frameworks/av/include/media/stagefright/ACodec.h
++++ b/frameworks/av/include/media/stagefright/ACodec.h
+@@ -79,16 +79,18 @@ struct ACodec : public AHierarchicalStateMachine {
+         Vector<sp<ABuffer> > mBuffers;
+ 
+         PortDescription();
+         void addBuffer(IOMX::buffer_id id, const sp<ABuffer> &buffer);
+ 
+         DISALLOW_EVIL_CONSTRUCTORS(PortDescription);
+     };
+ 
++friend class MediaCodec;
++
+ protected:
+     virtual ~ACodec();
+ 
+ private:
+     struct BaseState;
+     struct UninitializedState;
+     struct LoadedState;
+     struct LoadedToIdleState;
+@@ -197,16 +199,17 @@ private:
+ 
+     bool mChannelMaskPresent;
+     int32_t mChannelMask;
+     unsigned mDequeueCounter;
+     bool mStoreMetaDataInOutputBuffers;
+     int32_t mMetaDataBuffersToSubmit;
+ 
+     int64_t mRepeatFrameDelayUs;
++    bool mUseUndequeuedBufs;
+ 
+     status_t setCyclicIntraMacroblockRefresh(const sp<AMessage> &msg, int32_t mode);
+     status_t allocateBuffersOnPort(OMX_U32 portIndex);
+     status_t freeBuffersOnPort(OMX_U32 portIndex);
+     status_t freeBuffer(OMX_U32 portIndex, size_t i);
+ 
+     status_t configureOutputBuffersFromNativeWindow(
+             OMX_U32 *nBufferCount, OMX_U32 *nBufferSize,
+diff --git a/frameworks/av/include/media/stagefright/MediaCodec.h b/frameworks/av/include/media/stagefright/MediaCodec.h
+index 76aa503..bbbc380 100644
+--- a/frameworks/av/include/media/stagefright/MediaCodec.h
++++ b/frameworks/av/include/media/stagefright/MediaCodec.h
+@@ -116,16 +116,20 @@ struct MediaCodec : public AHandler {
+     // an input/output buffer has become available, a format change is
+     // pending, an error is pending.
+     void requestActivityNotification(const sp<AMessage> &notify);
+ 
+     status_t getName(AString *componentName) const;
+ 
+     status_t setParameters(const sp<AMessage> &params);
+ 
++    // This is used to get graphicBuffer with the index obtained from
++    // calling dequeueOutputBuffer()
++    sp<GraphicBuffer> getOutputGraphicBufferFromIndex(size_t index);
++
+ protected:
+     virtual ~MediaCodec();
+     virtual void onMessageReceived(const sp<AMessage> &msg);
+ 
+ private:
+     enum State {
+         UNINITIALIZED,
+         INITIALIZING,
+diff --git a/frameworks/av/media/libstagefright/ACodec.cpp b/frameworks/av/media/libstagefright/ACodec.cpp
+index 18611cd..f1e0bfd 100644
+--- a/frameworks/av/media/libstagefright/ACodec.cpp
++++ b/frameworks/av/media/libstagefright/ACodec.cpp
+@@ -366,17 +366,18 @@ ACodec::ACodec()
+       mShutdownInProgress(false),
+       mEncoderDelay(0),
+       mEncoderPadding(0),
+       mChannelMaskPresent(false),
+       mChannelMask(0),
+       mDequeueCounter(0),
+       mStoreMetaDataInOutputBuffers(false),
+       mMetaDataBuffersToSubmit(0),
+-      mRepeatFrameDelayUs(-1ll) {
++      mRepeatFrameDelayUs(-1ll),
++      mUseUndequeuedBufs(false) {
+     mUninitializedState = new UninitializedState(this);
+     mLoadedState = new LoadedState(this);
+     mLoadedToIdleState = new LoadedToIdleState(this);
+     mIdleToExecutingState = new IdleToExecutingState(this);
+     mExecutingState = new ExecutingState(this);
+ 
+     mOutputPortSettingsChangedState =
+         new OutputPortSettingsChangedState(this);
+@@ -735,17 +736,21 @@ status_t ACodec::allocateOutputBuffersFromNativeWindow() {
+ 
+     if (err != 0) {
+         // If an error occurred while dequeuing we need to cancel any buffers
+         // that were dequeued.
+         cancelStart = 0;
+         cancelEnd = mBuffers[kPortIndexOutput].size();
+     } else {
+         // Return the required minimum undequeued buffers to the native window.
+-        cancelStart = bufferCount - minUndequeuedBuffers;
++        if (mUseUndequeuedBufs) {
++          cancelStart = bufferCount;
++        } else {
++          cancelStart = bufferCount - minUndequeuedBuffers;
++        }
+         cancelEnd = bufferCount;
+     }
+ 
+     for (OMX_U32 i = cancelStart; i < cancelEnd; i++) {
+         BufferInfo *info = &mBuffers[kPortIndexOutput].editItemAt(i);
+         cancelBufferToNativeWindow(info);
+     }
+ 
+@@ -1342,16 +1347,23 @@ status_t ACodec::configureCodec(
+ 
+     int32_t maxInputSize;
+     if (msg->findInt32("max-input-size", &maxInputSize)) {
+         err = setMinBufferSize(kPortIndexInput, (size_t)maxInputSize);
+     } else if (!strcmp("OMX.Nvidia.aac.decoder", mComponentName.c_str())) {
+         err = setMinBufferSize(kPortIndexInput, 8192);  // XXX
+     }
+ 
++    int32_t useUndequeuedBufs;
++    if (msg->findInt32("moz-use-undequeued-bufs", &useUndequeuedBufs)) {
++        mUseUndequeuedBufs = true;
++    } else {
++        mUseUndequeuedBufs = false;
++    }
++
+     return err;
+ }
+ 
+ status_t ACodec::setMinBufferSize(OMX_U32 portIndex, size_t size) {
+     OMX_PARAM_PORTDEFINITIONTYPE def;
+     InitOMXParams(&def);
+     def.nPortIndex = portIndex;
+ 
+diff --git a/frameworks/av/media/libstagefright/MediaCodec.cpp b/frameworks/av/media/libstagefright/MediaCodec.cpp
+old mode 100644
+new mode 100755
+index f495a72..271bfe0
+--- a/frameworks/av/media/libstagefright/MediaCodec.cpp
++++ b/frameworks/av/media/libstagefright/MediaCodec.cpp
+@@ -1807,9 +1807,18 @@ status_t MediaCodec::amendOutputFormatWithCodecSpecificData(
+         // For everything else we just stash the codec specific data into
+         // the output format as a single piece of csd under "csd-0".
+         mOutputFormat->setBuffer("csd-0", buffer);
+     }
+ 
+     return OK;
+ }
+ 
++sp<GraphicBuffer> MediaCodec::getOutputGraphicBufferFromIndex(size_t index) {
++
++    if (mState != STARTED || index >= mPortBuffers[kPortIndexOutput].size()) {
++        return NULL;
++    }
++
++    return mCodec->mBuffers[kPortIndexOutput].editItemAt(index).mGraphicBuffer;
++}
++
+ }  // namespace android
