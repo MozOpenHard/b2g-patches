@@ -1,0 +1,72 @@
+diff --git a/gecko/dom/media/platforms/gonk/GonkVideoDecoderManager.cpp b/gecko/dom/media/platforms/gonk/GonkVideoDecoderManager.cpp
+index 2c07449..c16ba95 100644
+--- a/gecko/dom/media/platforms/gonk/GonkVideoDecoderManager.cpp
++++ b/gecko/dom/media/platforms/gonk/GonkVideoDecoderManager.cpp
+@@ -308,16 +308,30 @@ CopyGraphicBuffer(sp<GraphicBuffer>& aSource, sp<GraphicBuffer>& aDestination, g
+       // - Y height aligned to 32
+       srcData.mCbChannel = srcData.mYChannel + (srcData.mYStride * Align(srcData.mYSize.height, 32));
+       // Interleaved VU plane.
+       srcData.mCbSkip = 1;
+       srcData.mCrChannel = srcData.mCbChannel + 1;
+       srcData.mCrSkip = 1;
+       srcData.mCbCrStride = srcData.mYStride;
+       break;
++    case HAL_PIXEL_FORMAT_RGBA_8888: {
++      int height = aSource->getHeight();
++      int width = aSource->getWidth();
++      uint8_t* src = static_cast<uint8_t*>(srcPtr);
++      uint8_t* dest = static_cast<uint8_t*>(destPtr);
++      for (int i = 0; i < height; i++) {
++        memcpy(dest, src, width * 4);
++        src += aSource->getStride() * 4;
++        dest += aDestination->getStride() * 4;
++      }
++      aSource->unlock();
++      aDestination->unlock();
++      return;
++    }
+     default:
+       NS_ERROR("Unsupported input gralloc image type. Should never be here.");
+   }
+   // Build PlanarYCbCrData for destination buffer.
+   PlanarYCbCrData destData;
+   destData.mYChannel = static_cast<uint8_t*>(destPtr);
+   destData.mYSkip = 0;
+   destData.mYSize.width = aDestination->getWidth();
+@@ -351,22 +365,30 @@ GonkVideoDecoderManager::CreateVideoDataFromGraphicBuffer(MediaBuffer* aSource,
+     if (!mCopyAllocator) {
+       mCopyAllocator = new TextureClientRecycleAllocator(ImageBridgeChild::GetSingleton());
+     }
+     if (!mCopyAllocator) {
+       GVDM_LOG("Create buffer allocator failed!");
+       return nullptr;
+     }
+ 
+-    gfx::IntSize size(Align(srcBuffer->getWidth(), 2) , Align(srcBuffer->getHeight(), 2));
+-    textureClient =
+-      mCopyAllocator->CreateOrRecycle(gfx::SurfaceFormat::YUV, size,
+-                                      BackendSelector::Content,
+-                                      TextureFlags::DEFAULT,
+-                                      ALLOC_DISALLOW_BUFFERTEXTURECLIENT);
++    gfx::IntSize size(srcBuffer->getWidth(), srcBuffer->getHeight());
++    if (srcBuffer->getPixelFormat() == HAL_PIXEL_FORMAT_RGBA_8888) {
++      textureClient =
++        mCopyAllocator->CreateOrRecycle(gfx::SurfaceFormat::R8G8B8A8, size,
++                                        BackendSelector::Content,
++                                        TextureFlags::DEFAULT,
++                                        ALLOC_DISALLOW_BUFFERTEXTURECLIENT);
++    } else {
++      textureClient =
++        mCopyAllocator->CreateOrRecycle(gfx::SurfaceFormat::YUV, size,
++                                        BackendSelector::Content,
++                                        TextureFlags::DEFAULT,
++                                        ALLOC_DISALLOW_BUFFERTEXTURECLIENT);
++    }
+     if (!textureClient) {
+       GVDM_LOG("Copy buffer allocation failed!");
+       return nullptr;
+     }
+     // Update size to match buffer's.
+     aPicture.width = size.width;
+     aPicture.height = size.height;
+ 
