@@ -1,0 +1,12 @@
+diff --git a/gaia/apps/verticalhome/build/default-homescreens.json b/gaia/apps/verticalhome/build/default-homescreens.json
+index a6c38bf..943ecf6 100644
+--- a/gaia/apps/verticalhome/build/default-homescreens.json
++++ b/gaia/apps/verticalhome/build/default-homescreens.json
+@@ -28,6 +28,6 @@
+     ]
+   ],
+   "preferences": {
+-    "grid.cols": 3
++    "grid.cols": 4
+   }
+ }

@@ -1,0 +1,13 @@
+diff --git a/gaia/build/config/common-settings.json b/gaia/build/config/common-settings.json
+index b89d497..e311714 100644
+--- a/gaia/build/config/common-settings.json
++++ b/gaia/build/config/common-settings.json
+@@ -223,7 +223,7 @@
+    "search.marketplace.url": "https://marketplace.firefox.com/api/v2/apps/search/rocketbar/?q={q}&limit={limit}&lang={lang}&region=restofworld",
+    "screen.automatic-brightness": false,
+    "screen.brightness": 1,
+-   "screen.timeout": 60,
++   "screen.timeout": 0,
+    "search.suggestions.enabled": true,
+    "software-button.enabled": false,
+    "homegesture.enabled": false,

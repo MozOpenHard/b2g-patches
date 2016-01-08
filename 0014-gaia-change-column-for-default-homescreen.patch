@@ -1,0 +1,59 @@
+diff --git a/gaia/apps/homescreen/build/default-homescreens.json b/gaia/apps/homescreen/build/default-homescreens.json
+index a6c38bf..943ecf6 100644
+--- a/gaia/apps/homescreen/build/default-homescreens.json
++++ b/gaia/apps/homescreen/build/default-homescreens.json
+@@ -28,6 +28,6 @@
+     ]
+   ],
+   "preferences": {
+-    "grid.cols": 3
++    "grid.cols": 4
+   }
+ }
+diff --git a/gaia/apps/homescreen/js/settings.js b/gaia/apps/homescreen/js/settings.js
+index 834bbbe..37088d1 100644
+--- a/gaia/apps/homescreen/js/settings.js
++++ b/gaia/apps/homescreen/js/settings.js
+@@ -43,7 +43,8 @@
+ 
+         var syncSmallSetting = (signal) => {
+           stores[0].get(COLUMNS_SETTING).then(cols => {
+-            this.small = cols > 3;
++            // Temporary solution for CHIRIMEN
++            this.small = (cols > 3) || (cols === undefined);
+             signalChange();
+           });
+         };
+diff --git a/gaia/apps/settings/js/panels/homescreens/homescreen_cols.js b/gaia/apps/settings/js/panels/homescreens/homescreen_cols.js
+index 6d52714..bffc445 100644
+--- a/gaia/apps/settings/js/panels/homescreens/homescreen_cols.js
++++ b/gaia/apps/settings/js/panels/homescreens/homescreen_cols.js
+@@ -7,6 +7,8 @@ define(function(require) {
+   var Module = require('modules/base/module');
+   var HomescreenSettings = require('shared/homescreens/homescreen_settings');
+   var Observable = require('modules/mvvm/observable');
++  // Temporary solution for CHIRIMEN
++  const HOMESCREEN_FOUR_COLUMNS = 4;
+ 
+   var HomescreenCols = Module.create(function HomescreenCols() {
+     this.super(Observable).call(this);
+@@ -24,7 +26,8 @@ define(function(require) {
+ 
+     // Set the default value.
+     HomescreenSettings.get('grid.cols').then(number => {
+-      this._cols = number;
++      // Temporary solution for CHIRIMEN
++      this._cols = (number !== undefined) ? number : HOMESCREEN_FOUR_COLUMNS;
+     });
+   }).extend(Observable);
+ 
+@@ -65,7 +68,8 @@ define(function(require) {
+       HomescreenSettings.setStoreName(active ?
+         'vertical_preferences_store' : 'homescreen_settings');
+       HomescreenSettings.get('grid.cols').then(number => {
+-        this._cols = number;
++        // Temporary solution for CHIRIMEN
++        this._cols = (number !== undefined) ? number : HOMESCREEN_FOUR_COLUMNS;
+       });
+     },
+ 
